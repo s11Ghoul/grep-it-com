@@ -1,6 +1,12 @@
 {
-  "name": "grep.it.com",
+  "name": "grep-it",
   "version": "1.0.0",
-  "dependencies": {
+  "scripts": {
+    "backend": "cd grep-it-backend && npm run develop",
+    "frontend": "cd grep-it-frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
   }
 }
