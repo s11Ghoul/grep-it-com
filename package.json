@@ -1,10 +1,12 @@
 {
   "name": "grep-it",
-  "version": "1.0.0",
   "scripts": {
-    "backend": "cd grep-it-backend && npm run develop",
-    "frontend": "cd grep-it-frontend && npm run dev",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+    "backend:install": "cd grep-it-backend && npm install",
+    "frontend:install": "cd grep-it-frontend && npm install",
+    "install-all": "npm install && npm run backend:install && npm run frontend:install",
+    "backend:dev": "cd grep-it-backend && npm run develop",
+    "frontend:dev": "cd grep-it-frontend && npm run dev",
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\""
   },
   "devDependencies": {
     "concurrently": "^8.0.1"
