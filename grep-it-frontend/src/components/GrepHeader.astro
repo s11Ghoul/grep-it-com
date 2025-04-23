@@ -1,0 +1,44 @@
+---
+// Основной компонент заголовка сайта с "терминальным" стилем
+---
+
+<header class="bg-terminal-bg text-terminal-text shadow-md">
+  <div class="container mx-auto px-4 py-3">
+    <div class="flex items-center justify-between">
+      <!-- Логотип -->
+      <a href="/" class="flex items-center">
+        <span class="text-terminal-green font-mono text-2xl font-bold">grep</span>
+        <span class="text-terminal-text font-mono text-2xl">.it</span>
+      </a>
+
+      <!-- Навигация -->
+      <nav class="hidden md:flex items-center space-x-8">
+        <a href="/reviews" class="hover:text-terminal-green transition-colors">Reviews</a>
+        <a href="/news" class="hover:text-terminal-green transition-colors">News</a>
+        <a href="/guides" class="hover:text-terminal-green transition-colors">Guides</a>
+        <a href="/compare" class="hover:text-terminal-green transition-colors">Compare</a>
+      </nav>
+
+      <!-- Поиск и мобильное меню -->
+      <div class="flex items-center space-x-4">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="grep -i 'search term'"
+            class="bg-terminal-dark text-terminal-text border border-terminal-border rounded px-4 py-2 w-56 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-terminal-green"
+          />
+          <button class="absolute right-3 top-2.5 text-terminal-green">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+        <button class="md:hidden text-terminal-text">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

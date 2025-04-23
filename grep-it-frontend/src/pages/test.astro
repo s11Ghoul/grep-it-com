@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/MainLayout.astro';
+import { fetchAPI } from '../lib/api';
+
+let testData = null;
+let error = null;
+
+try {
+  // Самый простой запрос
+  testData = await fetchAPI('categories', { populate: '*' });
+  console.log('Test data:', testData);
+} catch (err) {
+  error = err.message;
+  console.error('Test error:', err);
+}
+---
+
+<Layout title="API Test">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-mono mb-4">API Test Page</h1>
+
+    {error ? (
+      <div class="bg-terminal-red bg-opacity-20 p-4 rounded border border-terminal-red">
+        <h2 class="text-terminal-red font-mono">Error:</h2>
+        <pre class="mt-2 p-2 bg-terminal-dark">{error}</pre>
+      </div>
+    ) : (
+      <div class="bg-terminal-green bg-opacity-20 p-4 rounded border border-terminal-green">
+        <h2 class="text-terminal-green font-mono">Success!</h2>
+        <pre class="mt-2 p-2 bg-terminal-dark overflow-auto max-h-96">
+          {JSON.stringify(testData, null, 2)}
+        </pre>
+      </div>
+    )}
+
+    <div class="mt-6">
+      <h3 class="font-mono text-terminal-yellow mb-2">Troubleshooting Tips:</h3>
+      <ul class="list-disc pl-5 space-y-2">
+        <li>Ensure Strapi server is running at <a href="http://localhost:1337/admin" target="_blank" class="text-terminal-blue underline">http://localhost:1337/admin</a></li>
+        <li>Check that permissions are set for public access</li>
+        <li>Verify API endpoint names match your content types exactly</li>
+        <li>Check for CORS issues (try accessing API directly in browser)</li>
+      </ul>
+    </div>
+  </div>
+</Layout>

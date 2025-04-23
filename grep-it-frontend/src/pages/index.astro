@@ -1,11 +1,230 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from '../layouts/MainLayout.astro';
+import { fetchAPI, getStrapiMedia } from '../lib/api';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// Получение данных для главной страницы
+let latestReviews = { data: [] };
+let categories = { data: [] };
+let error = null;
+
+try {
+  // Получение категорий
+  categories = await fetchAPI('categories', {
+    populate: '*'
+  });
+
+  // Получение последних обзоров
+  latestReviews = await fetchAPI('reviews', {
+    sort: 'publishedAt:desc',
+    populate: '*',
+    pagination: {
+      page: 1,
+      pageSize: 6
+    }
+  });
+
+  console.log('Data loaded successfully!');
+  // Выведем первую категорию для отладки
+  if (categories.data && categories.data.length > 0) {
+    console.log('First category sample:', JSON.stringify(categories.data[0], null, 2));
+  }
+} catch (err) {
+  error = err.message;
+  console.error('Error loading data:', err);
+}
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="grep.it.com - Filtering the tech noise">
+  <!-- Hero Section -->
+  <section class="bg-terminal-bg py-16">
+    <div class="container mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto">
+        <h1 class="text-4xl md:text-5xl font-mono font-bold mb-4">
+          <span class="text-terminal-green">grep</span>
+          <span class="text-terminal-text">.it</span>
+        </h1>
+        <p class="text-xl mb-8">Filtering the tech noise. In-depth reviews, comparisons and guides.</p>
+        <div class="flex justify-center space-x-4">
+          <a href="/reviews" class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-6 rounded transition-colors font-mono">
+            $ cat reviews
+          </a>
+          <a href="/compare" class="border border-terminal-border hover:border-terminal-green text-terminal-text hover:text-terminal-green py-2 px-6 rounded transition-colors font-mono">
+            $ grep --compare
+          </a>
+        </div>
+
+        {error && (
+          <div class="mt-8 p-4 bg-terminal-red bg-opacity-20 border border-terminal-red rounded-md text-left">
+            <h3 class="font-mono text-terminal-red">API Error:</h3>
+            <p class="text-terminal-text">{error}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Категории -->
+  <section class="bg-terminal-dark py-12">
+    <div class="container mx-auto px-4">
+      <h2 class="font-mono text-2xl text-terminal-yellow mb-8">
+        <span class="text-terminal-green">grep</span> --categories
+      </h2>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {categories.data && categories.data.length > 0 ? (
+          categories.data.map((category) => {
+            // Проверяем наличие необходимых данных
+            const slug = category?.attributes?.slug;
+            const name = category?.attributes?.name || 'Unnamed Category';
+            const hasImage = category?.attributes?.image?.data != null;
+
+            return (
+              <a href={slug ? `/categories/${slug}` : '#'} class="bg-terminal-bg border border-terminal-border rounded-md p-4 text-center hover:border-terminal-green transition-colors">
+                <div class="h-16 flex items-center justify-center mb-4">
+                  {hasImage ? (
+                    <img
+                      src={getStrapiMedia(category.attributes.image)}
+                      alt={name}
+                      class="h-12 w-auto"
+                    />
+                  ) : (
+                    <div class="w-12 h-12 bg-terminal-dark rounded-full flex items-center justify-center">
+                      <span class="text-terminal-green text-2xl">#</span>
+                    </div>
+                  )}
+                </div>
+                <h3 class="font-mono text-terminal-text">{name}</h3>
+              </a>
+            );
+          })
+        ) : (
+          <div class="col-span-4 text-center py-8">
+            <p class="text-terminal-comment italic">No categories found. Create some in Strapi admin panel.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Последние обзоры -->
+  <section class="py-12">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="font-mono text-2xl text-terminal-yellow">
+          <span class="text-terminal-green">grep</span> --latest-reviews
+        </h2>
+        <a href="/reviews" class="text-terminal-green font-mono hover:underline">
+          $ cat all_reviews
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {latestReviews.data && latestReviews.data.length > 0 ? (
+          latestReviews.data.map((review) => {
+            // Проверяем наличие необходимых данных
+            const slug = review?.attributes?.slug;
+            const title = review?.attributes?.title || 'Untitled Review';
+            const excerpt = review?.attributes?.excerpt || 'No excerpt available';
+            const rating = review?.attributes?.rating;
+            const publishedAt = review?.attributes?.publishedAt;
+            const hasImage = review?.attributes?.featuredImage?.data != null;
+            const category = review?.attributes?.category?.data?.attributes;
+
+            return (
+              <article class="bg-terminal-bg border border-terminal-border rounded-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                <a href={slug ? `/reviews/${slug}` : '#'} class="block">
+                  <div class="relative">
+                    {hasImage ? (
+                      <img
+                        src={getStrapiMedia(review.attributes.featuredImage)}
+                        alt={title}
+                        class="w-full h-48 object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div class="w-full h-48 bg-terminal-dark flex items-center justify-center">
+                        <span class="text-terminal-comment text-2xl">No image</span>
+                      </div>
+                    )}
+                    {rating !== undefined && (
+                      <div class="absolute top-3 right-3 bg-terminal-dark text-terminal-text px-2 py-1 rounded font-mono text-sm border border-terminal-border">
+                        <span class="text-terminal-yellow">{rating}/10</span>
+                      </div>
+                    )}
+                  </div>
+                </a>
+
+                <div class="p-4">
+                  {/* Заголовок и метаданные */}
+                  <div class="mb-2 font-mono text-xs text-terminal-comment">
+                    {publishedAt && (
+                      <span>{new Date(publishedAt).toLocaleDateString()}</span>
+                    )}
+                    {category && category.slug && (
+                      <>
+                        <span class="mx-2">|</span>
+                        <a href={`/categories/${category.slug}`} class="text-terminal-green">
+                          {category.name || 'Unnamed Category'}
+                        </a>
+                      </>
+                    )}
+                  </div>
+
+                  <h2 class="font-mono text-lg font-bold text-terminal-yellow mb-2">
+                    <a href={slug ? `/reviews/${slug}` : '#'} class="hover:text-terminal-green transition-colors">
+                      {title}
+                    </a>
+                  </h2>
+
+                  <p class="text-terminal-text mb-4 text-sm">{excerpt}</p>
+
+                  <a href={slug ? `/reviews/${slug}` : '#'} class="inline-block font-mono text-terminal-green text-sm hover:underline">
+                    $ cat full_review
+                  </a>
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <div class="col-span-3 text-center py-12">
+            <p class="text-terminal-comment italic mb-4">No reviews found. Create some in Strapi admin panel.</p>
+            <div class="inline-block p-4 border border-terminal-border rounded-md bg-terminal-bg">
+              <code class="font-mono text-terminal-text">
+                $ cd grep-it-backend<br>
+                $ npm run develop<br>
+                <span class="text-terminal-green"># Open http://localhost:1337/admin</span><br>
+                <span class="text-terminal-green"># Create content in Content Manager</span>
+              </code>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Секция подписки на новости -->
+  <section class="py-12 bg-terminal-bg border-t border-b border-terminal-border">
+    <div class="container mx-auto px-4 max-w-screen-md text-center">
+      <h2 class="font-mono text-2xl text-terminal-yellow mb-2">
+        <span class="text-terminal-green">echo</span> "Subscribe for updates"
+      </h2>
+      <p class="text-terminal-text mb-6">Get the latest tech news and reviews delivered to your inbox.</p>
+
+      <form class="flex flex-col md:flex-row gap-4">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          class="bg-terminal-dark text-terminal-text border border-terminal-border rounded px-4 py-2 flex-grow focus:outline-none focus:ring-1 focus:ring-terminal-green"
+          required
+        />
+        <button
+          type="submit"
+          class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-6 rounded transition-colors font-mono"
+        >
+          Subscribe
+        </button>
+      </form>
+      <p class="text-terminal-comment text-sm mt-4">No spam, unsubscribe anytime with "grep --unsubscribe"</p>
+    </div>
+  </section>
 </Layout>

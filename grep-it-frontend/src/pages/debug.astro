@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/MainLayout.astro';
+import { fetchAPI } from '../lib/api';
+
+let data = null;
+let error = null;
+
+try {
+  // Самый простой запрос без параметров
+  data = await fetchAPI('categories');
+  console.log('Data loaded:', data);
+} catch (err) {
+  error = err.message;
+  console.error('Error loading data:', err);
+}
+---
+
+<Layout title="grep.it.com - Debug Page">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-mono font-bold mb-4 text-terminal-yellow">Debug Page</h1>
+
+    {error ? (
+      <div class="p-4 bg-terminal-red bg-opacity-20 border border-terminal-red rounded-md">
+        <h2 class="text-terminal-red font-mono mb-2">Error:</h2>
+        <pre class="bg-terminal-dark p-4 rounded overflow-auto">{error}</pre>
+      </div>
+    ) : (
+      <div class="p-4 bg-terminal-green bg-opacity-20 border border-terminal-green rounded-md">
+        <h2 class="text-terminal-green font-mono mb-2">Success!</h2>
+        <pre class="bg-terminal-dark p-4 rounded overflow-auto">{JSON.stringify(data, null, 2)}</pre>
+      </div>
+    )}
+
+    <div class="mt-8 p-4 bg-terminal-bg border border-terminal-border rounded-md">
+      <h2 class="font-mono text-terminal-yellow mb-4">Troubleshooting Steps:</h2>
+
+      <ol class="list-decimal ml-5 space-y-2">
+        <li>
+          <strong>Check API Directly:</strong>
+          <a href="http://localhost:1337/api/categories" target="_blank" class="text-terminal-green underline">
+            Open http://localhost:1337/api/categories in browser
+          </a>
+        </li>
+        <li>
+          <strong>Check Strapi Version:</strong> Verify in package.json that you're using Strapi v4
+        </li>
+        <li>
+          <strong>Check API URL Format:</strong> Make sure URL is correct
+          <pre class="bg-terminal-dark p-2 rounded mt-1">Current API URL: {import.meta.env.PUBLIC_STRAPI_API_URL || 'http://localhost:1337'}</pre>
+        </li>
+        <li>
+          <strong>Check CORS Configuration:</strong> Make sure Strapi allows requests from Astro
+        </li>
+      </ol>
+    </div>
+  </div>
+</Layout>
