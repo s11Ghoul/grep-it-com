@@ -1,0 +1,817 @@
+---
+import Layout from '../../layouts/MainLayout.astro';
+import { fetchAPI, getStrapiMedia } from '../../lib/api';
+
+// В будущем, этот код будет получать данные из API по slug
+// Для MVP используем моковые данные
+const { slug } = Astro.params;
+
+// Демо-обзор (в реальном приложении здесь будет запрос к API)
+const review = {
+  title: "Samsung Galaxy S25 Ultra Review",
+  slug: "samsung-galaxy-s25-ultra-review",
+  publishedAt: "2025-04-15",
+  updatedAt: "2025-04-17",
+  excerpt: "The latest flagship from Samsung pushes the boundaries of what a smartphone can do. Is it worth the premium price?",
+  rating: 9.2,
+  pros: [
+    "Exceptional camera system with 200MP main sensor",
+    "New AI features are actually useful in daily use",
+    "7 years of software updates",
+    "Improved battery life over previous generation",
+    "S-Pen functionality is refined and responsive"
+  ],
+  cons: [
+    "Even more expensive than last year's model",
+    "Still no headphone jack",
+    "Large and heavy for some users",
+    "Some AI features require cloud processing"
+  ],
+  specifications: {
+    processor: "Snapdragon 8 Gen 4",
+    display: "6.9-inch Dynamic AMOLED 2X, 1-120Hz adaptive refresh rate, 3200 x 1440 pixels",
+    camera: "200MP main, 12MP ultrawide, 10MP 3x telephoto, 50MP 10x periscope zoom, 40MP selfie",
+    battery: "5,500 mAh with 45W wired charging, 15W wireless charging",
+    storage: "256GB / 512GB / 1TB",
+    ram: "12GB / 16GB / 24GB LPDDR6",
+    os: "Android 16 with One UI 7.0",
+    dimensions: "163.3 x 78.1 x 8.9mm",
+    weight: "233g"
+  },
+  category: { name: "Smartphones", slug: "smartphones" },
+  author: { name: "Alex Tech", avatar: null },
+  content: `## Introduction
+
+Samsung's latest flagship, the Galaxy S25 Ultra, represents the culmination of the company's smartphone innovations for 2025. Building upon the foundation of the S24 Ultra, this new model refines rather than revolutionizes - but the refinements are meaningful and contribute to what might be the most complete smartphone package available today.
+
+## Design and Build
+
+The Galaxy S25 Ultra maintains Samsung's industrial design language with a few notable improvements. The squared-off edges have been slightly rounded to improve hand feel, while maintaining the distinctive Ultra look. The titanium frame returns, now with improved durability and a slightly more matte finish that's resistant to fingerprints.
+
+Available in Phantom Black, Titanium Gray, Jade Green, and the new Aurora Purple, the color options offer something for everyone. The Armor Aluminum frame and Gorilla Glass Victus 3 front and back panels provide best-in-class durability with an IP68 rating for dust and water resistance.
+
+## Display
+
+The 6.9-inch Dynamic AMOLED 2X display continues to be one of the best in the industry. With a 3200 x 1440 resolution and adaptive refresh rate from 1-120Hz, everything from scrolling through websites to gaming looks smooth and responsive. Peak brightness has been bumped to 2,800 nits, making the screen easily visible even in direct sunlight.
+
+Samsung has managed to reduce the bezels even further, resulting in an impressive 92% screen-to-body ratio. The under-display fingerprint sensor is noticeably faster than its predecessor, with almost instantaneous recognition.
+
+## Performance and Software
+
+Powered by the Snapdragon 8 Gen 4 processor across all regions, the S25 Ultra offers blazing-fast performance. Our review unit with 16GB of RAM handled everything we threw at it without breaking a sweat, from intensive 3D gaming to multitasking between resource-heavy apps.
+
+One UI 7.0 based on Android 16 brings several notable improvements to the user experience:
+
+- Refined material design elements that respect Samsung's aesthetic
+- Enhanced Samsung DeX mode with better desktop-like functionality
+- New AI-powered features for photography, productivity, and daily use
+- Improved battery management tools
+- Streamlined settings menu
+
+Perhaps most importantly, Samsung's commitment to 7 years of OS updates means the S25 Ultra will remain current until at least 2032, which significantly enhances the long-term value proposition.
+
+## Camera System
+
+The camera system receives meaningful upgrades this year, headlined by the new 200MP ISOCELL HP9 main sensor. This sensor features larger 0.8μm pixels and an improved design that captures more light than its predecessor. The results are noticeable:
+
+- Better low-light performance with less noise
+- Improved dynamic range in challenging lighting situations
+- More natural-looking portrait mode with better edge detection
+- 8K video recording at 30fps with improved stabilization
+
+The ultrawide camera remains 12MP but benefits from a wider f/1.8 aperture for better low-light performance. The telephoto lineup consists of a 10MP 3x optical zoom lens and a 50MP periscope lens with 10x optical zoom, both with optical image stabilization.
+
+Samsung's new "ProVisual Engine" AI-powered image processing shows restraint compared to competitors, enhancing photos without making them look artificial. Night mode photos are particularly impressive, with excellent retention of details and accurate colors.
+
+## Battery Life and Charging
+
+The 5,500mAh battery represents a modest capacity increase over the S24 Ultra, but combined with the more efficient processor and display, it delivers significantly improved battery life. In our testing, the phone easily lasted through heavy use days with 20-30% remaining by bedtime.
+
+Charging speeds remain the same at 45W wired and 15W wireless, with the phone reaching about 70% in 30 minutes with the compatible charger (not included in the box). While not the fastest charging phone on the market, the exceptional battery life means you'll rarely find yourself in urgent need of a top-up.
+
+## S-Pen Functionality
+
+The integrated S-Pen continues to be a standout feature of the Ultra line. Samsung has reduced the latency to an imperceptible 2.8ms, making writing and drawing feel even more natural. New AI-powered features include:
+
+- Improved handwriting recognition with support for more languages
+- Smart Select enhancements for extracting text and images
+- New Air Command gestures for productivity shortcuts
+- Integration with Samsung Notes for AI-powered organization
+
+## Value and Conclusion
+
+Starting at $1,299 for the 256GB model, the Galaxy S25 Ultra sits firmly in premium flagship territory. While the price is difficult to justify for many consumers, those who can afford it are getting the most complete, no-compromise Android smartphone available today.
+
+The combination of class-leading hardware, refined software, versatile camera system, and industry-leading update commitment makes the S25 Ultra an easy recommendation for power users, photography enthusiasts, and anyone who wants the absolute best Android experience without switching phones frequently.
+
+For those upgrading from an S23 Ultra or earlier, the improvements are substantial enough to justify the purchase. S24 Ultra owners may want to hold off unless specific features like the enhanced camera system or additional RAM are particularly compelling.`,
+  score: {
+    design: 9.3,
+    display: 9.8,
+    performance: 9.5,
+    camera: 9.4,
+    battery: 9.0,
+    software: 9.1,
+    value: 8.3
+  }
+};
+
+// Форматирование даты
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+}
+
+// Расчет средней оценки
+function calculateAverage(scores) {
+  const values = Object.values(scores);
+  return values.reduce((sum, val) => sum + val, 0) / values.length;
+}
+
+// Создание рейтинговой шкалы
+function getRatingBar(score, label) {
+  return {
+    score,
+    label,
+    percentage: score * 10
+  };
+}
+
+// Создание списка рейтингов
+const ratingBars = [
+  getRatingBar(review.score.design, 'Design'),
+  getRatingBar(review.score.display, 'Display'),
+  getRatingBar(review.score.performance, 'Performance'),
+  getRatingBar(review.score.camera, 'Camera'),
+  getRatingBar(review.score.battery, 'Battery'),
+  getRatingBar(review.score.software, 'Software'),
+  getRatingBar(review.score.value, 'Value')
+];
+
+// Выбор статуса рейтинга в зависимости от оценки
+function getRatingStatus(rating) {
+  if (rating >= 9) return { text: 'Excellent', color: 'text-terminal-green' };
+  if (rating >= 8) return { text: 'Great', color: 'text-terminal-yellow' };
+  if (rating >= 7) return { text: 'Good', color: 'text-terminal-text' };
+  if (rating >= 5) return { text: 'Average', color: 'text-terminal-comment' };
+  return { text: 'Poor', color: 'text-terminal-red' };
+}
+
+const ratingStatus = getRatingStatus(review.rating);
+
+// Связанные обзоры (в реальном приложении будет API-запрос)
+const relatedReviews = [
+  {
+    title: 'Google Pixel 10 Pro Review',
+    slug: 'google-pixel-10-pro-review',
+    excerpt: 'Google's computational photography reaches new heights with the Pixel 10 Pro.',
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  },
+  {
+    title: 'iPhone 17 Pro Max Review',
+    slug: 'iphone-17-pro-max-review',
+    excerpt: 'Apple's latest flagship brings meaningful upgrades to an already excellent formula.',
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  },
+  {
+    title: 'OnePlus 14 Pro Review',
+    slug: 'oneplus-14-pro-review',
+    excerpt: 'OnePlus returns to its roots with a flagship killer that doesn't break the bank.',
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  }
+];
+---
+
+<Layout title={`${review.title} | grep.it.com - Filtering the tech noise`}>
+  <div class="container mx-auto px-4 py-8">
+    <!-- Хлебные крошки -->
+    <div class="text-terminal-comment mb-6">
+      <div class="flex items-center text-sm">
+        <a href="/" class="hover:text-terminal-green">Home</a>
+        <span class="mx-2">/</span>
+        <a href="/reviews" class="hover:text-terminal-green">Reviews</a>
+        <span class="mx-2">/</span>
+        <a href={`/categories/${review.category.slug}`} class="hover:text-terminal-green">{review.category.name}</a>
+        <span class="mx-2">/</span>
+        <span class="text-terminal-text">{review.title}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Основная колонка -->
+      <div class="lg:col-span-2">
+        <!-- Заголовок и мета-информация -->
+        <h1 class="text-3xl md:text-4xl font-mono font-bold text-terminal-yellow mb-4">
+          {review.title}
+        </h1>
+
+        <div class="flex items-center text-terminal-comment text-sm mb-6">
+          <span>By {review.author.name}</span>
+          <span class="mx-2">•</span>
+          <span>Published {formatDate(review.publishedAt)}</span>
+          {review.publishedAt !== review.updatedAt && (
+            <>
+              <span class="mx-2">•</span>
+              <span>Updated {formatDate(review.updatedAt)}</span>
+            </>
+          )}
+        </div>
+
+        <!-- Изображение продукта -->
+        <div class="bg-terminal-dark rounded-md overflow-hidden mb-8">
+          <div class="aspect-video flex items-center justify-center bg-terminal-bg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-terminal-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Вступление -->
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4 mb-8">
+          <p class="text-lg text-terminal-text">{review.excerpt}</p>
+        </div>
+
+        <!-- Плюсы и минусы -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div class="bg-terminal-green bg-opacity-10 border border-terminal-green rounded-md p-4">
+            <h2 class="font-mono text-terminal-green text-lg mb-3">Pros</h2>
+            <ul class="space-y-2">
+              {review.pros.map(pro => (
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-terminal-green mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-terminal-text">{pro}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div class="bg-terminal-red bg-opacity-10 border border-terminal-red rounded-md p-4">
+            <h2 class="font-mono text-terminal-red text-lg mb-3">Cons</h2>
+            <ul class="space-y-2">
+              {review.cons.map(con => (
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-terminal-red mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-terminal-text">{con}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Основное содержание -->
+        <div class="prose prose-invert prose-terminal max-w-none mb-8">
+          <div class="bg-terminal-dark p-4 rounded-md border border-terminal-border mb-6 font-mono">
+            <div class="flex mb-2">
+              <div class="w-3 h-3 rounded-full bg-terminal-red mr-2"></div>
+              <div class="w-3 h-3 rounded-full bg-terminal-yellow mr-2"></div>
+              <div class="w-3 h-3 rounded-full bg-terminal-green"></div>
+            </div>
+            <div class="flex">
+              <span class="text-terminal-green mr-2">$</span>
+              <span class="text-terminal-text">cat</span>
+              <span class="text-terminal-yellow ml-2">{review.title.toLowerCase().replace(/\s+/g, '-')}.md</span>
+            </div>
+          </div>
+
+          <!-- Контент обзора -->
+          <article class="markdown">
+            <!-- Здесь будет динамический контент после интеграции с MDX или другим процессором Markdown -->
+            <!-- Для MVP просто отобразим текст как есть -->
+            {review.content.split('\n\n').map(paragraph => {
+              if (paragraph.startsWith('## ')) {
+                const heading = paragraph.replace('## ', '');
+                return <h2 class="text-2xl text-terminal-yellow font-mono mb-4 mt-8">{heading}</h2>;
+              }
+              return <p class="mb-4 text-terminal-text">{paragraph}</p>;
+            })}
+          </article>
+        </div>
+
+        <!-- Секция комментариев -->
+        <div class="mt-12 pt-8 border-t border-terminal-border">
+          <h2 class="text-2xl font-mono text-terminal-yellow mb-6">Comments</h2>
+
+          <div class="bg-terminal-bg border border-terminal-border rounded-md p-6 mb-8">
+            <form class="space-y-4">
+              <div>
+                <label for="comment" class="block text-terminal-text mb-2 font-mono">Leave a comment:</label>
+                <textarea
+                  id="comment"
+                  rows="4"
+                  class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded p-3 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+                  placeholder="$ echo 'Your thoughts...'"
+                ></textarea>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="name" class="block text-terminal-text mb-2 font-mono">Name:</label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded p-3 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+                    placeholder="$ whoami"
+                  />
+                </div>
+                <div>
+                  <label for="email" class="block text-terminal-text mb-2 font-mono">Email:</label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded p-3 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+                    placeholder="your@email.com"
+                  />
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-6 rounded transition-colors font-mono"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Заглушка для комментариев -->
+          <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-terminal-comment mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-terminal-comment">Be the first to comment on this review!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Боковая колонка -->
+      <div class="lg:col-span-1">
+        <!-- Карточка с рейтингом -->
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4 mb-6 sticky top-4">
+          <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center h-24 w-24 bg-terminal-dark rounded-full mb-2">
+              <span class="text-2xl font-bold font-mono text-terminal-yellow">{review.rating.toFixed(1)}</span>
+            </div>
+            <div class={`text-lg font-mono ${ratingStatus.color}`}>{ratingStatus.text}</div>
+          </div>
+
+          <!-- Детализация рейтинга -->
+          <div class="space-y-3">
+            {ratingBars.map(bar => (
+              <div>
+                <div class="flex justify-between text-sm mb-1">---
+import Layout from '../../layouts/MainLayout.astro';
+import { fetchAPI, getStrapiMedia } from '../../lib/api';
+
+// В будущем, этот код будет получать данные из API по slug
+// Для MVP используем моковые данные
+const { slug } = Astro.params;
+
+// Демо-обзор (в реальном приложении здесь будет запрос к API)
+const review = {
+  title: "Samsung Galaxy S25 Ultra Review",
+  slug: "samsung-galaxy-s25-ultra-review",
+  publishedAt: "2025-04-15",
+  updatedAt: "2025-04-17",
+  excerpt: "The latest flagship from Samsung pushes the boundaries of what a smartphone can do. Is it worth the premium price?",
+  rating: 9.2,
+  pros: [
+    "Exceptional camera system with 200MP main sensor",
+    "New AI features are actually useful in daily use",
+    "7 years of software updates",
+    "Improved battery life over previous generation",
+    "S-Pen functionality is refined and responsive"
+  ],
+  cons: [
+    "Even more expensive than last year's model",
+    "Still no headphone jack",
+    "Large and heavy for some users",
+    "Some AI features require cloud processing"
+  ],
+  specifications: {
+    processor: "Snapdragon 8 Gen 4",
+    display: "6.9-inch Dynamic AMOLED 2X, 1-120Hz adaptive refresh rate, 3200 x 1440 pixels",
+    camera: "200MP main, 12MP ultrawide, 10MP 3x telephoto, 50MP 10x periscope zoom, 40MP selfie",
+    battery: "5,500 mAh with 45W wired charging, 15W wireless charging",
+    storage: "256GB / 512GB / 1TB",
+    ram: "12GB / 16GB / 24GB LPDDR6",
+    os: "Android 16 with One UI 7.0",
+    dimensions: "163.3 x 78.1 x 8.9mm",
+    weight: "233g"
+  },
+  category: { name: "Smartphones", slug: "smartphones" },
+  author: { name: "Alex Tech", avatar: null },
+  content: `## Introduction
+
+Samsung's latest flagship, the Galaxy S25 Ultra, represents the culmination of the company's smartphone innovations for 2025. Building upon the foundation of the S24 Ultra, this new model refines rather than revolutionizes - but the refinements are meaningful and contribute to what might be the most complete smartphone package available today.
+
+## Design and Build
+
+The Galaxy S25 Ultra maintains Samsung's industrial design language with a few notable improvements. The squared-off edges have been slightly rounded to improve hand feel, while maintaining the distinctive Ultra look. The titanium frame returns, now with improved durability and a slightly more matte finish that's resistant to fingerprints.
+
+Available in Phantom Black, Titanium Gray, Jade Green, and the new Aurora Purple, the color options offer something for everyone. The Armor Aluminum frame and Gorilla Glass Victus 3 front and back panels provide best-in-class durability with an IP68 rating for dust and water resistance.
+
+## Display
+
+The 6.9-inch Dynamic AMOLED 2X display continues to be one of the best in the industry. With a 3200 x 1440 resolution and adaptive refresh rate from 1-120Hz, everything from scrolling through websites to gaming looks smooth and responsive. Peak brightness has been bumped to 2,800 nits, making the screen easily visible even in direct sunlight.
+
+Samsung has managed to reduce the bezels even further, resulting in an impressive 92% screen-to-body ratio. The under-display fingerprint sensor is noticeably faster than its predecessor, with almost instantaneous recognition.
+
+## Performance and Software
+
+Powered by the Snapdragon 8 Gen 4 processor across all regions, the S25 Ultra offers blazing-fast performance. Our review unit with 16GB of RAM handled everything we threw at it without breaking a sweat, from intensive 3D gaming to multitasking between resource-heavy apps.
+
+One UI 7.0 based on Android 16 brings several notable improvements to the user experience:
+
+- Refined material design elements that respect Samsung's aesthetic
+- Enhanced Samsung DeX mode with better desktop-like functionality
+- New AI-powered features for photography, productivity, and daily use
+- Improved battery management tools
+- Streamlined settings menu
+
+Perhaps most importantly, Samsung's commitment to 7 years of OS updates means the S25 Ultra will remain current until at least 2032, which significantly enhances the long-term value proposition.
+
+## Camera System
+
+The camera system receives meaningful upgrades this year, headlined by the new 200MP ISOCELL HP9 main sensor. This sensor features larger 0.8μm pixels and an improved design that captures more light than its predecessor. The results are noticeable:
+
+- Better low-light performance with less noise
+- Improved dynamic range in challenging lighting situations
+- More natural-looking portrait mode with better edge detection
+- 8K video recording at 30fps with improved stabilization
+
+The ultrawide camera remains 12MP but benefits from a wider f/1.8 aperture for better low-light performance. The telephoto lineup consists of a 10MP 3x optical zoom lens and a 50MP periscope lens with 10x optical zoom, both with optical image stabilization.
+
+Samsung's new "ProVisual Engine" AI-powered image processing shows restraint compared to competitors, enhancing photos without making them look artificial. Night mode photos are particularly impressive, with excellent retention of details and accurate colors.
+
+## Battery Life and Charging
+
+The 5,500mAh battery represents a modest capacity increase over the S24 Ultra, but combined with the more efficient processor and display, it delivers significantly improved battery life. In our testing, the phone easily lasted through heavy use days with 20-30% remaining by bedtime.
+
+Charging speeds remain the same at 45W wired and 15W wireless, with the phone reaching about 70% in 30 minutes with the compatible charger (not included in the box). While not the fastest charging phone on the market, the exceptional battery life means you'll rarely find yourself in urgent need of a top-up.
+
+## S-Pen Functionality
+
+The integrated S-Pen continues to be a standout feature of the Ultra line. Samsung has reduced the latency to an imperceptible 2.8ms, making writing and drawing feel even more natural. New AI-powered features include:
+
+- Improved handwriting recognition with support for more languages
+- Smart Select enhancements for extracting text and images
+- New Air Command gestures for productivity shortcuts
+- Integration with Samsung Notes for AI-powered organization
+
+## Value and Conclusion
+
+Starting at $1,299 for the 256GB model, the Galaxy S25 Ultra sits firmly in premium flagship territory. While the price is difficult to justify for many consumers, those who can afford it are getting the most complete, no-compromise Android smartphone available today.
+
+The combination of class-leading hardware, refined software, versatile camera system, and industry-leading update commitment makes the S25 Ultra an easy recommendation for power users, photography enthusiasts, and anyone who wants the absolute best Android experience without switching phones frequently.
+
+For those upgrading from an S23 Ultra or earlier, the improvements are substantial enough to justify the purchase. S24 Ultra owners may want to hold off unless specific features like the enhanced camera system or additional RAM are particularly compelling.`,
+  score: {
+    design: 9.3,
+    display: 9.8,
+    performance: 9.5,
+    camera: 9.4,
+    battery: 9.0,
+    software: 9.1,
+    value: 8.3
+  }
+};
+
+// Форматирование даты
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+}
+
+// Расчет средней оценки
+function calculateAverage(scores) {
+  const values = Object.values(scores);
+  return values.reduce((sum, val) => sum + val, 0) / values.length;
+}
+
+// Создание рейтинговой шкалы
+function getRatingBar(score, label) {
+  return {
+    score,
+    label,
+    percentage: score * 10
+  };
+}
+
+// Создание списка рейтингов
+const ratingBars = [
+  getRatingBar(review.score.design, 'Design'),
+  getRatingBar(review.score.display, 'Display'),
+  getRatingBar(review.score.performance, 'Performance'),
+  getRatingBar(review.score.camera, 'Camera'),
+  getRatingBar(review.score.battery, 'Battery'),
+  getRatingBar(review.score.software, 'Software'),
+  getRatingBar(review.score.value, 'Value')
+];
+
+// Выбор статуса рейтинга в зависимости от оценки
+function getRatingStatus(rating) {
+  if (rating >= 9) return { text: 'Excellent', color: 'text-terminal-green' };
+  if (rating >= 8) return { text: 'Great', color: 'text-terminal-yellow' };
+  if (rating >= 7) return { text: 'Good', color: 'text-terminal-text' };
+  if (rating >= 5) return { text: 'Average', color: 'text-terminal-comment' };
+  return { text: 'Poor', color: 'text-terminal-red' };
+}
+
+const ratingStatus = getRatingStatus(review.rating);
+
+// Связанные обзоры (в реальном приложении будет API-запрос)
+const relatedReviews = [
+  {
+    title: 'Google Pixel 10 Pro Review',
+    slug: 'google-pixel-10-pro-review',
+    excerpt: 'Google's computational photography reaches new heights with the Pixel 10 Pro.',
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  },
+  {
+    title: 'iPhone 17 Pro Max Review',
+    slug: 'iphone-17-pro-max-review',
+    excerpt: 'Apple's latest flagship brings meaningful upgrades to an already excellent formula.',
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  },
+  {
+    title: 'OnePlus 14 Pro Review',
+    slug: 'oneplus-14-pro-review',
+    excerpt: 'OnePlus returns to its roots with a flagship killer that doesn't break the bank.',
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  }
+];
+---
+
+<Layout title={`${review.title} | grep.it.com - Filtering the tech noise`}>
+  <div class="container mx-auto px-4 py-8">
+    <!-- Хлебные крошки -->
+    <div class="text-terminal-comment mb-6">
+      <div class="flex items-center text-sm">
+        <a href="/" class="hover:text-terminal-green">Home</a>
+        <span class="mx-2">/</span>
+        <a href="/reviews" class="hover:text-terminal-green">Reviews</a>
+        <span class="mx-2">/</span>
+        <a href={`/categories/${review.category.slug}`} class="hover:text-terminal-green">{review.category.name}</a>
+        <span class="mx-2">/</span>
+        <span class="text-terminal-text">{review.title}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Основная колонка -->
+      <div class="lg:col-span-2">
+        <!-- Заголовок и мета-информация -->
+        <h1 class="text-3xl md:text-4xl font-mono font-bold text-terminal-yellow mb-4">
+          {review.title}
+        </h1>
+
+        <div class="flex items-center text-terminal-comment text-sm mb-6">
+          <span>By {review.author.name}</span>
+          <span class="mx-2">•</span>
+          <span>Published {formatDate(review.publishedAt)}</span>
+          {review.publishedAt !== review.updatedAt && (
+            <>
+              <span class="mx-2">•</span>
+              <span>Updated {formatDate(review.updatedAt)}</span>
+            </>
+          )}
+        </div>
+
+        <!-- Изображение продукта -->
+        <div class="bg-terminal-dark rounded-md overflow-hidden mb-8">
+          <div class="aspect-video flex items-center justify-center bg-terminal-bg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-terminal-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Вступление -->
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4 mb-8">
+          <p class="text-lg text-terminal-text">{review.excerpt}</p>
+        </div>
+
+        <!-- Плюсы и минусы -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div class="bg-terminal-green bg-opacity-10 border border-terminal-green rounded-md p-4">
+            <h2 class="font-mono text-terminal-green text-lg mb-3">Pros</h2>
+            <ul class="space-y-2">
+              {review.pros.map(pro => (
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-terminal-green mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-terminal-text">{pro}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div class="bg-terminal-red bg-opacity-10 border border-terminal-red rounded-md p-4">
+            <h2 class="font-mono text-terminal-red text-lg mb-3">Cons</h2>
+            <ul class="space-y-2">
+              {review.cons.map(con => (
+                <li class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-terminal-red mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-terminal-text">{con}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Основное содержание -->
+        <div class="prose prose-invert prose-terminal max-w-none mb-8">
+          <div class="bg-terminal-dark p-4 rounded-md border border-terminal-border mb-6 font-mono">
+            <div class="flex mb-2">
+              <div class="w-3 h-3 rounded-full bg-terminal-red mr-2"></div>
+              <div class="w-3 h-3 rounded-full bg-terminal-yellow mr-2"></div>
+              <div class="w-3 h-3 rounded-full bg-terminal-green"></div>
+            </div>
+            <div class="flex">
+              <span class="text-terminal-green mr-2">$</span>
+              <span class="text-terminal-text">cat</span>
+              <span class="text-terminal-yellow ml-2">{review.title.toLowerCase().replace(/\s+/g, '-')}.md</span>
+            </div>
+          </div>
+
+          <!-- Контент обзора -->
+          <article class="markdown">
+            <!-- Здесь будет динамический контент после интеграции с MDX или другим процессором Markdown -->
+            <!-- Для MVP просто отобразим текст как есть -->
+            {review.content.split('\n\n').map(paragraph => {
+              if (paragraph.startsWith('## ')) {
+                const heading = paragraph.replace('## ', '');
+                return <h2 class="text-2xl text-terminal-yellow font-mono mb-4 mt-8">{heading}</h2>;
+              }
+              return <p class="mb-4 text-terminal-text">{paragraph}</p>;
+            })}
+          </article>
+        </div>
+
+        <!-- Секция комментариев -->
+        <div class="mt-12 pt-8 border-t border-terminal-border">
+          <h2 class="text-2xl font-mono text-terminal-yellow mb-6">Comments</h2>
+
+          <div class="bg-terminal-bg border border-terminal-border rounded-md p-6 mb-8">
+            <form class="space-y-4">
+              <div>
+                <label for="comment" class="block text-terminal-text mb-2 font-mono">Leave a comment:</label>
+                <textarea
+                  id="comment"
+                  rows="4"
+                  class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded p-3 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+                  placeholder="$ echo 'Your thoughts...'"
+                ></textarea>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="name" class="block text-terminal-text mb-2 font-mono">Name:</label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded p-3 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+                    placeholder="$ whoami"
+                  />
+                </div>
+                <div>
+                  <label for="email" class="block text-terminal-text mb-2 font-mono">Email:</label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded p-3 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+                    placeholder="your@email.com"
+                  />
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-6 rounded transition-colors font-mono"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Заглушка для комментариев -->
+          <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-terminal-comment mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-terminal-comment">Be the first to comment on this review!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Боковая колонка -->
+      <div class="lg:col-span-1">
+        <!-- Карточка с рейтингом -->
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4 mb-6 sticky top-4">
+          <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center h-24 w-24 bg-terminal-dark rounded-full mb-2">
+              <span class="text-2xl font-bold font-mono text-terminal-yellow">{review.rating.toFixed(1)}</span>
+            </div>
+            <div class={`text-lg font-mono ${ratingStatus.color}`}>{ratingStatus.text}</div>
+          </div>
+
+          <!-- Детализация рейтинга -->
+          <div class="space-y-3">
+            {ratingBars.map(bar => (
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-terminal-text">{bar.label}</span>
+                  <span class="text-terminal-yellow font-mono">{bar.score.toFixed(1)}</span>
+                </div>
+                <div class="h-2 bg-terminal-dark rounded overflow-hidden">
+                  <div
+                    class="h-full bg-terminal-green rounded-r"
+                    style={`width: ${bar.percentage}%`}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Спецификации -->
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4 mb-6">
+          <h3 class="font-mono text-lg text-terminal-yellow mb-4">Specifications</h3>
+
+          <div class="space-y-3">
+            {Object.entries(review.specifications).map(([key, value]) => (
+              <div class="border-b border-terminal-border pb-2 last:border-0 last:pb-0">
+                <div class="text-terminal-comment text-sm font-mono">{key.charAt(0).toUpperCase() + key.slice(1)}</div>
+                <div class="text-terminal-text">{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Связанные обзоры -->
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4">
+          <h3 class="font-mono text-lg text-terminal-yellow mb-4">Related Reviews</h3>
+
+          <div class="space-y-4">
+            {relatedReviews.map(related => (
+              <a href={`/reviews/${related.slug}`} class="block p-3 hover:bg-terminal-dark rounded transition-colors">
+                <h4 class="font-mono text-terminal-green mb-1">{related.title}</h4>
+                <p class="text-terminal-text text-sm">{related.excerpt}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  /* Стили для контента Markdown */
+  .markdown h2 {
+    @apply text-2xl text-terminal-yellow font-mono mb-4 mt-8;
+  }
+
+  .markdown h3 {
+    @apply text-xl text-terminal-yellow font-mono mb-3 mt-6;
+  }
+
+  .markdown p {
+    @apply text-terminal-text mb-4;
+  }
+
+  .markdown ul {
+    @apply list-disc pl-6 mb-4 text-terminal-text;
+  }
+
+  .markdown li {
+    @apply mb-2;
+  }
+
+  .markdown a {
+    @apply text-terminal-green hover:underline;
+  }
+
+  .markdown blockquote {
+    @apply border-l-4 border-terminal-border pl-4 italic text-terminal-comment my-4;
+  }
+
+  .markdown code {
+    @apply bg-terminal-dark text-terminal-text px-1 py-0.5 rounded font-mono text-sm;
+  }
+
+  .markdown pre {
+    @apply bg-terminal-dark p-4 rounded overflow-auto mb-4;
+  }
+
+  .markdown pre code {
+    @apply p-0 bg-transparent;
+  }
+</style>

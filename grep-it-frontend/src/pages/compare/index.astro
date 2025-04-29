@@ -1,0 +1,749 @@
+---
+import Layout from '../../layouts/MainLayout.astro';
+import { fetchAPI, getStrapiMedia } from '../../lib/api';
+
+// Для MVP используем демо-данные
+// Категории
+const categories = [
+  { name: 'Smartphones', slug: 'smartphones' },
+  { name: 'Laptops', slug: 'laptops' },
+  { name: 'PC Components', slug: 'pc-components' },
+  { name: 'Gaming', slug: 'gaming' },
+  { name: 'Smart Home', slug: 'smart-home' },
+  { name: 'Audio', slug: 'audio' },
+  { name: 'Wearables', slug: 'wearables' },
+  { name: 'Accessories', slug: 'accessories' }
+];
+
+// Демо-продукты для сравнения (смартфоны)
+const smartphones = [
+  {
+    id: 1,
+    name: 'Samsung Galaxy S25 Ultra',
+    slug: 'samsung-galaxy-s25-ultra',
+    rating: 9.2,
+    specs: {
+      processor: 'Snapdragon 8 Gen 4',
+      display: '6.9-inch Dynamic AMOLED 2X, 1-120Hz adaptive refresh rate, 3200 x 1440 pixels',
+      camera: '200MP main, 12MP ultrawide, 10MP 3x telephoto, 50MP 10x periscope zoom, 40MP selfie',
+      battery: '5,500 mAh with 45W wired charging, 15W wireless charging',
+      storage: '256GB / 512GB / 1TB',
+      ram: '12GB / 16GB / 24GB LPDDR6',
+      os: 'Android 16 with One UI 7.0',
+      dimensions: '163.3 x 78.1 x 8.9mm',
+      weight: '233g',
+      price: '$1,299'
+    }
+  },
+  {
+    id: 2,
+    name: 'iPhone 17 Pro Max',
+    slug: 'iphone-17-pro-max',
+    rating: 9.4,
+    specs: {
+      processor: 'A19 Pro Bionic',
+      display: '6.9-inch Super Retina XDR ProMotion, 1-120Hz adaptive refresh rate, 3200 x 1400 pixels',
+      camera: '48MP main, 48MP ultrawide, 12MP 3x telephoto, 12MP 5x telephoto, 24MP selfie',
+      battery: '5,000 mAh with 35W wired charging, 20W MagSafe wireless charging',
+      storage: '256GB / 512GB / 1TB / 2TB',
+      ram: '12GB',
+      os: 'iOS 19',
+      dimensions: '161.2 x 77.8 x 8.3mm',
+      weight: '225g',
+      price: '$1,399'
+    }
+  },
+  {
+    id: 3,
+    name: 'Google Pixel 10 Pro',
+    slug: 'google-pixel-10-pro',
+    rating: 9.0,
+    specs: {
+      processor: 'Google Tensor G6',
+      display: '6.7-inch LTPO OLED, 1-120Hz adaptive refresh rate, 3120 x 1440 pixels',
+      camera: '50MP main, 48MP ultrawide, 48MP 5x telephoto, 20MP selfie',
+      battery: '5,300 mAh with 40W wired charging, 23W wireless charging',
+      storage: '256GB / 512GB',
+      ram: '16GB LPDDR5X',
+      os: 'Android 16',
+      dimensions: '162.5 x 76.8 x 8.5mm',
+      weight: '215g',
+      price: '$1,099'
+    }
+  },
+  {
+    id: 4,
+    name: 'OnePlus 14 Pro',
+    slug: 'oneplus-14-pro',
+    rating: 8.8,
+    specs: {
+      processor: 'Snapdragon 8 Gen 4',
+      display: '6.8-inch LTPO AMOLED, 1-120Hz adaptive refresh rate, 3168 x 1440 pixels',
+      camera: '50MP main, 50MP ultrawide, 64MP 3x telephoto, 32MP selfie',
+      battery: '5,800 mAh with 100W wired charging, 50W wireless charging',
+      storage: '256GB / 512GB',
+      ram: '16GB / 24GB LPDDR5X',
+      os: 'OxygenOS 16 (Android 16)',
+      dimensions: '163.0 x 75.8 x 8.2mm',
+      weight: '220g',
+      price: '$899'
+    }
+  },
+  {
+    id: 5,
+    name: 'Xiaomi 15 Ultra',
+    slug: 'xiaomi-15-ultra',
+    rating: 8.6,
+    specs: {
+      processor: 'Snapdragon 8 Gen 4',
+      display: '6.9-inch AMOLED, 1-120Hz adaptive refresh rate, 3200 x 1440 pixels',
+      camera: '200MP main, 50MP ultrawide, 50MP 3x telephoto, 50MP 10x periscope, 32MP selfie',
+      battery: '6,000 mAh with 120W wired charging, 50W wireless charging',
+      storage: '256GB / 512GB / 1TB',
+      ram: '12GB / 16GB LPDDR5X',
+      os: 'MIUI 16 (Android 16)',
+      dimensions: '164.1 x 76.9 x 9.1mm',
+      weight: '226g',
+      price: '$999'
+    }
+  }
+];
+
+// Демо-продукты для сравнения (ноутбуки)
+const laptops = [
+  {
+    id: 1,
+    name: 'MacBook Pro 14" (M4 Pro)',
+    slug: 'macbook-pro-14-m4-pro',
+    rating: 9.5,
+    specs: {
+      processor: 'Apple M4 Pro (12-core CPU, 16-core GPU)',
+      display: '14.2-inch Liquid Retina XDR, 120Hz ProMotion, 3024 x 1964 pixels',
+      ram: '32GB unified memory',
+      storage: '1TB SSD',
+      battery: '70Wh, up to 18 hours',
+      ports: '3x Thunderbolt 5, HDMI, SD card, 3.5mm audio, MagSafe',
+      dimensions: '312.6 x 221.2 x 15.5mm',
+      weight: '1.55kg',
+      os: 'macOS 15',
+      price: '$2,499'
+    }
+  },
+  {
+    id: 2,
+    name: 'Dell XPS 13 Plus (2025)',
+    slug: 'dell-xps-13-plus-2025',
+    rating: 8.9,
+    specs: {
+      processor: 'Intel Core Ultra 9 285H',
+      display: '13.4-inch OLED, 120Hz, 3840 x 2400 pixels',
+      ram: '32GB LPDDR5x',
+      storage: '1TB PCIe 4.0 SSD',
+      battery: '60Wh, up to 12 hours',
+      ports: '2x Thunderbolt 5, 1x USB-C, 3.5mm audio',
+      dimensions: '295.3 x 199.0 x 14.9mm',
+      weight: '1.24kg',
+      os: 'Windows 12 Pro',
+      price: '$1,799'
+    }
+  },
+  {
+    id: 3,
+    name: 'ThinkPad X1 Carbon Gen 14',
+    slug: 'thinkpad-x1-carbon-gen-14',
+    rating: 9.0,
+    specs: {
+      processor: 'Intel Core Ultra 7 265H',
+      display: '14-inch IPS, 90Hz, 2880 x 1800 pixels',
+      ram: '32GB LPDDR5',
+      storage: '1TB PCIe 4.0 SSD',
+      battery: '65Wh, up to 15 hours',
+      ports: '2x Thunderbolt 5, 2x USB-A, HDMI, 3.5mm audio',
+      dimensions: '323.5 x 217.1 x 15.4mm',
+      weight: '1.12kg',
+      os: 'Windows 12 Pro',
+      price: '$1,949'
+    }
+  }
+];
+
+// Получаем выбранную категорию и продукты из URL-параметров (если есть)
+const { searchParams } = Astro.url;
+const selectedCategory = searchParams.get('category') || 'smartphones';
+const productParam = searchParams.get('products') || '';
+const productIds = productParam ? productParam.split(',').map(Number) : [];
+---
+
+<Layout title="Compare Products | grep.it.com - Filtering the tech noise">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-mono font-bold mb-8">
+      <span class="text-terminal-green">grep</span>
+      <span class="text-terminal-text"> --compare</span>
+    </h1>
+
+    <div class="bg-terminal-bg border border-terminal-border rounded-md p-6 mb-8">
+      <div class="flex flex-col md:flex-row gap-6">
+        <!-- Выбор категории -->
+        <div class="flex-1">
+          <label for="category" class="block font-mono text-terminal-yellow mb-2">Select Category</label>
+          <select
+            id="category-select"
+            class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-terminal-green"
+          >
+            {categories.map(category => (
+              <option
+                value={category.slug}
+                selected={category.slug === selectedCategory}
+              >
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Поиск продуктов -->
+        <div class="flex-2">
+          <label for="search" class="block font-mono text-terminal-yellow mb-2">Search Products</label>
+          <div class="relative">
+            <input
+              type="text"
+              id="product-search"
+              placeholder="Type to search products..."
+              class="w-full bg-terminal-dark text-terminal-text border border-terminal-border rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-terminal-green pr-10"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute right-3 top-2.5 text-terminal-comment" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Инструкции -->
+      <div class="mt-6 pt-6 border-t border-terminal-border">
+        <div class="bg-terminal-dark p-3 rounded border border-terminal-border mb-4">
+          <div class="font-mono text-sm">
+            <span class="text-terminal-green">$</span>
+            <span class="text-terminal-text"> grep</span>
+            <span class="text-terminal-comment"> --compare --help</span>
+          </div>
+        </div>
+        <p class="text-terminal-text mb-3">Select up to 5 products to compare their specifications side by side.</p>
+        <ol class="text-terminal-text list-decimal list-inside space-y-1">
+          <li>Choose a category from the dropdown above</li>
+          <li>Select products to compare from the list below</li>
+          <li>Click "Compare Selected" to see detailed comparison</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Список продуктов для сравнения -->
+    <div id="products-container">
+      <!-- Контент будет загружен в зависимости от выбранной категории -->
+      {selectedCategory === 'smartphones' && (
+        <div>
+          <h2 class="text-xl font-mono text-terminal-yellow mb-4">Select Smartphones to Compare</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {smartphones.map(phone => (
+              <label class="block cursor-pointer">
+                <div class={`bg-terminal-bg border ${productIds.includes(phone.id) ? 'border-terminal-green' : 'border-terminal-border'} rounded-md p-4 h-full hover:border-terminal-green transition-colors`}>
+                  <div class="flex items-start">
+                    <input
+                      type="checkbox"
+                      name="product"
+                      value={phone.id}
+                      class="form-checkbox bg-terminal-dark border-terminal-border text-terminal-green rounded focus:ring-0 mt-1"
+                      checked={productIds.includes(phone.id)}
+                    />
+                    <div class="ml-3">
+                      <h3 class="font-mono text-terminal-text font-bold">{phone.name}</h3>
+                      <div class="flex items-center mt-1">
+                        <span class="text-terminal-yellow font-mono">{phone.rating.toFixed(1)}</span>
+                        <span class="mx-2 text-terminal-comment">•</span>
+                        <span class="text-terminal-text">{phone.specs.price}</span>
+                      </div>
+                      <p class="text-terminal-comment text-sm mt-2">
+                        {phone.specs.processor}, {phone.specs.ram.split(' ')[0]} RAM
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          <div class="flex justify-center">
+            <button
+              id="compare-button"
+              class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-8 rounded transition-colors font-mono"
+              disabled={productIds.length < 2}
+            >
+              Compare Selected ({productIds.length}/5)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {selectedCategory === 'laptops' && (
+        <div>
+          <h2 class="text-xl font-mono text-terminal-yellow mb-4">Select Laptops to Compare</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {laptops.map(laptop => (
+              <label class="block cursor-pointer">
+                <div class={`bg-terminal-bg border ${productIds.includes(laptop.id) ? 'border-terminal-green' : 'border-terminal-border'} rounded-md p-4 h-full hover:border-terminal-green transition-colors`}>
+                  <div class="flex items-start">
+                    <input
+                      type="checkbox"
+                      name="product"
+                      value={laptop.id}
+                      class="form-checkbox bg-terminal-dark border-terminal-border text-terminal-green rounded focus:ring-0 mt-1"
+                      checked={productIds.includes(laptop.id)}
+                    />
+                    <div class="ml-3">
+                      <h3 class="font-mono text-terminal-text font-bold">{laptop.name}</h3>
+                      <div class="flex items-center mt-1">
+                        <span class="text-terminal-yellow font-mono">{laptop.rating.toFixed(1)}</span>
+                        <span class="mx-2 text-terminal-comment">•</span>
+                        <span class="text-terminal-text">{laptop.specs.price}</span>
+                      </div>
+                      <p class="text-terminal-comment text-sm mt-2">
+                        {laptop.specs.processor}, {laptop.specs.ram}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          <div class="flex justify-center">
+            <button
+              id="compare-button-laptops"
+              class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-8 rounded transition-colors font-mono"
+              disabled={productIds.length < 2}
+            >
+              Compare Selected ({productIds.length}/5)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {selectedCategory !== 'smartphones' && selectedCategory !== 'laptops' && (
+        <div class="text-center py-12">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-terminal-comment mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <h2 class="font-mono text-xl text-terminal-yellow mb-2">Coming Soon</h2>
+          <p class="text-terminal-text">Product comparison for this category is not available yet.</p>
+          <p class="text-terminal-comment mt-2">Please check back later or try smartphones or laptops.</p>
+        </div>
+      )}
+    </div>
+
+    <!-- Секция сравнения (показывается только после выбора продуктов) -->
+    {(productIds.length >= 2 && selectedCategory === 'smartphones') && (
+      <div id="comparison-section" class="mt-12 pt-8 border-t border-terminal-border">
+        <h2 class="text-2xl font-mono text-terminal-yellow mb-6">Comparison Results</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th class="text-left font-mono text-terminal-text p-2 border-b border-terminal-border"></th>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <th class="text-left font-mono text-terminal-green p-2 border-b border-terminal-border min-w-[250px]">
+                      {phone.name}
+                    </th>
+                  ) : null;
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Rating</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      <span class="font-mono text-terminal-yellow">{phone.rating.toFixed(1)}</span>/10
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Price</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.price}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Processor</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.processor}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Display</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.display}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">RAM</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.ram}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Storage</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.storage}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Camera</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.camera}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Battery</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.battery}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">OS</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.os}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Dimensions</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.dimensions}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Weight</td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {phone.specs.weight}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2"></td>
+                {productIds.map(id => {
+                  const phone = smartphones.find(p => p.id === id);
+                  return phone ? (
+                    <td class="p-2">
+                      <a
+                        href={`/reviews/${phone.slug}`}
+                        class="inline-block font-mono text-terminal-green text-sm hover:underline"
+                      >
+                        Read Full Review
+                      </a>
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+
+    {(productIds.length >= 2 && selectedCategory === 'laptops') && (
+      <div id="comparison-section-laptops" class="mt-12 pt-8 border-t border-terminal-border">
+        <h2 class="text-2xl font-mono text-terminal-yellow mb-6">Comparison Results</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th class="text-left font-mono text-terminal-text p-2 border-b border-terminal-border"></th>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <th class="text-left font-mono text-terminal-green p-2 border-b border-terminal-border min-w-[250px]">
+                      {laptop.name}
+                    </th>
+                  ) : null;
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Rating</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      <span class="font-mono text-terminal-yellow">{laptop.rating.toFixed(1)}</span>/10
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Price</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.price}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Processor</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.processor}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Display</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.display}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">RAM</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.ram}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Storage</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.storage}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Battery</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.battery}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Ports</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.ports}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">OS</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.os}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Dimensions</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.dimensions}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2 border-b border-terminal-border">Weight</td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="text-terminal-text p-2 border-b border-terminal-border">
+                      {laptop.specs.weight}
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+              <tr>
+                <td class="font-mono text-terminal-yellow p-2"></td>
+                {productIds.map(id => {
+                  const laptop = laptops.find(p => p.id === id);
+                  return laptop ? (
+                    <td class="p-2">
+                      <a
+                        href={`/reviews/${laptop.slug}`}
+                        class="inline-block font-mono text-terminal-green text-sm hover:underline"
+                      >
+                        Read Full Review
+                      </a>
+                    </td>
+                  ) : null;
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script>
+  // JavaScript для обработки выбора категории и продуктов
+  document.addEventListener('DOMContentLoaded', () => {
+    const categorySelect = document.getElementById('category-select');
+    const compareButton = document.getElementById('compare-button');
+    const compareButtonLaptops = document.getElementById('compare-button-laptops');
+
+    // Обработка изменения категории
+    if (categorySelect) {
+      categorySelect.addEventListener('change', (e) => {
+        window.location.href = `/compare?category=${e.target.value}`;
+      });
+    }
+
+    // Обновление состояния кнопки сравнения при выборе продуктов
+    const checkboxes = document.querySelectorAll('input[name="product"]');
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        const selectedProducts = Array.from(document.querySelectorAll('input[name="product"]:checked'))
+          .map(cb => cb.value);
+
+
+        // Обновить текст кнопок
+        if (compareButton) {
+          compareButton.textContent = `Compare Selected (${selectedProducts.length}/5)`;
+          compareButton.disabled = selectedProducts.length < 2;
+        }
+
+        if (compareButtonLaptops) {
+          compareButtonLaptops.textContent = `Compare Selected (${selectedProducts.length}/5)`;
+          compareButtonLaptops.disabled = selectedProducts.length < 2;
+        }
+      });
+    });
+
+    // Обработка нажатия на кнопку сравнения
+    if (compareButton) {
+      compareButton.addEventListener('click', () => {
+        const selectedProducts = Array.from(document.querySelectorAll('input[name="product"]:checked'))
+          .map(cb => cb.value);
+
+        if (selectedProducts.length >= 2) {
+          window.location.href = `/compare?category=smartphones&products=${selectedProducts.join(',')}`;
+        }
+      });
+    }
+
+    if (compareButtonLaptops) {
+      compareButtonLaptops.addEventListener('click', () => {
+        const selectedProducts = Array.from(document.querySelectorAll('input[name="product"]:checked'))
+          .map(cb => cb.value);
+
+        if (selectedProducts.length >= 2) {
+          window.location.href = `/compare?category=laptops&products=${selectedProducts.join(',')}`;
+        }
+      });
+    }
+
+    // Поиск продуктов
+    const productSearch = document.getElementById('product-search');
+    if (productSearch) {
+      productSearch.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const productItems = document.querySelectorAll('.cursor-pointer');
+
+        productItems.forEach(item => {
+          const productName = item.querySelector('h3').textContent.toLowerCase();
+          if (productName.includes(searchTerm)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    }
+  });
+</script>

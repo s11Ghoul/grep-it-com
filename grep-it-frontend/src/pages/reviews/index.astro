@@ -1,0 +1,291 @@
+---
+import Layout from '../../layouts/MainLayout.astro';
+import { fetchAPI, getStrapiMedia } from '../../lib/api';
+
+// Для MVP будем использовать демо-данные, позже заменим на реальные
+const reviews = [
+  {
+    title: 'Samsung Galaxy S25 Ultra Review',
+    slug: 'samsung-galaxy-s25-ultra-review',
+    excerpt: 'The latest flagship from Samsung pushes the boundaries of what a smartphone can do. Is it worth the premium price?',
+    publishedAt: '2025-04-15',
+    rating: 9.2,
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  },
+  {
+    title: 'MacBook Pro M4 Deep Dive',
+    slug: 'macbook-pro-m4-deep-dive',
+    excerpt: 'Apple's new silicon delivers unprecedented performance and battery life. We test it to the limits.',
+    publishedAt: '2025-04-10',
+    rating: 9.5,
+    category: { name: 'Laptops', slug: 'laptops' }
+  },
+  {
+    title: 'Nvidia GeForce RTX 5090 Analysis',
+    slug: 'nvidia-geforce-rtx-5090-analysis',
+    excerpt: 'The most powerful consumer GPU ever made - we benchmark it across 15 games and professional workloads.',
+    publishedAt: '2025-04-05',
+    rating: 9.0,
+    category: { name: 'PC Components', slug: 'pc-components' }
+  },
+  {
+    title: 'Sony WH-2000XM6 Headphones',
+    slug: 'sony-wh-2000xm6-headphones',
+    excerpt: 'The successor to Sony\'s popular noise-cancelling headphones brings improved sound and smarter features.',
+    publishedAt: '2025-04-01',
+    rating: 8.8,
+    category: { name: 'Audio', slug: 'audio' }
+  },
+  {
+    title: 'Steam Deck 2 vs ROG Ally X',
+    slug: 'steam-deck-2-vs-rog-ally-x',
+    excerpt: 'Which handheld gaming PC reigns supreme? We compare performance, battery life, and game compatibility.',
+    publishedAt: '2025-03-25',
+    rating: 8.7,
+    category: { name: 'Gaming', slug: 'gaming' }
+  },
+  {
+    title: 'Apple Vision Pro: 6 Months Later',
+    slug: 'apple-vision-pro-six-months-later',
+    excerpt: 'Has Apple's spatial computing headset lived up to the hype? We reassess after 6 months of real-world use.',
+    publishedAt: '2025-03-20',
+    rating: 8.5,
+    category: { name: 'Wearables', slug: 'wearables' }
+  },
+  {
+    title: 'AMD Ryzen 9 9950X CPU Review',
+    slug: 'amd-ryzen-9-9950x-cpu-review',
+    excerpt: 'AMD's latest flagship CPU sets new benchmarks for performance and efficiency. We dig into the details.',
+    publishedAt: '2025-03-15',
+    rating: 9.3,
+    category: { name: 'PC Components', slug: 'pc-components' }
+  },
+  {
+    title: 'Nothing Phone 3 - Style Over Substance?',
+    slug: 'nothing-phone-3-review',
+    excerpt: 'The third iteration of Nothing's transparent phone continues to turn heads, but is the software experience catching up?',
+    publishedAt: '2025-03-10',
+    rating: 7.8,
+    category: { name: 'Smartphones', slug: 'smartphones' }
+  },
+  {
+    title: 'Dell XPS 15 (2025) - The MacBook Alternative',
+    slug: 'dell-xps-15-2025-review',
+    excerpt: 'Dell's flagship laptop gets a major redesign and performance boost, making it a serious contender for creative professionals.',
+    publishedAt: '2025-03-05',
+    rating: 8.9,
+    category: { name: 'Laptops', slug: 'laptops' }
+  },
+  {
+    title: 'Best Smart Home Hubs of 2025',
+    slug: 'best-smart-home-hubs-2025',
+    excerpt: 'A comprehensive comparison of the top smart home hubs, with a focus on Matter compatibility and privacy features.',
+    publishedAt: '2025-03-01',
+    rating: 8.6,
+    category: { name: 'Smart Home', slug: 'smart-home' }
+  },
+  {
+    title: 'Mechanical Keyboard Shootout 2025',
+    slug: 'mechanical-keyboard-shootout-2025',
+    excerpt: 'We test 10 premium mechanical keyboards to find the best typing experience for programmers and enthusiasts.',
+    publishedAt: '2025-02-25',
+    rating: 8.4,
+    category: { name: 'Accessories', slug: 'accessories' }
+  },
+  {
+    title: 'The Best Linux Laptops for Developers',
+    slug: 'best-linux-laptops-for-developers-2025',
+    excerpt: 'From System76 to Framework, we evaluate the top Linux-first laptops for software development and open source enthusiasts.',
+    publishedAt: '2025-02-20',
+    rating: 9.1,
+    category: { name: 'Laptops', slug: 'laptops' }
+  }
+];
+
+// Получение категорий для фильтра
+const categories = [
+  { name: 'All Categories', slug: 'all', count: reviews.length },
+  { name: 'Smartphones', slug: 'smartphones', count: reviews.filter(r => r.category.slug === 'smartphones').length },
+  { name: 'Laptops', slug: 'laptops', count: reviews.filter(r => r.category.slug === 'laptops').length },
+  { name: 'PC Components', slug: 'pc-components', count: reviews.filter(r => r.category.slug === 'pc-components').length },
+  { name: 'Gaming', slug: 'gaming', count: reviews.filter(r => r.category.slug === 'gaming').length },
+  { name: 'Audio', slug: 'audio', count: reviews.filter(r => r.category.slug === 'audio').length },
+  { name: 'Wearables', slug: 'wearables', count: reviews.filter(r => r.category.slug === 'wearables').length },
+  { name: 'Smart Home', slug: 'smart-home', count: reviews.filter(r => r.category.slug === 'smart-home').length },
+  { name: 'Accessories', slug: 'accessories', count: reviews.filter(r => r.category.slug === 'accessories').length }
+];
+
+// Sorts
+const sortOptions = [
+  { label: 'Newest First', value: 'date-desc' },
+  { label: 'Oldest First', value: 'date-asc' },
+  { label: 'Highest Rated', value: 'rating-desc' },
+  { label: 'Lowest Rated', value: 'rating-asc' },
+  { label: 'A-Z', value: 'title-asc' },
+  { label: 'Z-A', value: 'title-desc' }
+];
+
+// Функция для форматирования даты
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+}
+---
+
+<Layout title="Tech Reviews | grep.it.com - Filtering the tech noise">
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col-reverse md:flex-row md:justify-between md:items-center mb-8">
+      <h1 class="text-3xl font-mono font-bold mt-4 md:mt-0">
+        <span class="text-terminal-green">cat</span>
+        <span class="text-terminal-text"> reviews/</span>
+      </h1>
+
+      <!-- Сортировка -->
+      <div class="flex items-center gap-2">
+        <label for="sort" class="text-terminal-text font-mono text-sm whitespace-nowrap">$ sort --by</label>
+        <select id="sort" class="bg-terminal-dark text-terminal-text border border-terminal-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-terminal-green">
+          {sortOptions.map(option => (
+            <option value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <!-- Боковая панель с фильтрами -->
+      <div class="md:col-span-1">
+        <div class="bg-terminal-bg border border-terminal-border rounded-md p-4 sticky top-4">
+          <h2 class="font-mono text-lg text-terminal-yellow mb-4">
+            <span class="text-terminal-green">grep</span> --filter
+          </h2>
+
+          <div class="space-y-2">
+            {categories.map(category => (
+              <a
+                href={category.slug === 'all' ? '/reviews' : `/reviews?category=${category.slug}`}
+                class="flex justify-between items-center p-2 rounded hover:bg-terminal-dark transition-colors block"
+              >
+                <span class={category.slug === 'all' ? 'text-terminal-green' : 'text-terminal-text'}>
+                  {category.name}
+                </span>
+                <span class="bg-terminal-dark text-terminal-comment text-xs px-2 py-1 rounded-full">
+                  {category.count}
+                </span>
+              </a>
+            ))}
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-terminal-border">
+            <h3 class="font-mono text-terminal-yellow mb-4">Rating</h3>
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 text-terminal-text cursor-pointer">
+                <input type="checkbox" class="form-checkbox bg-terminal-dark border-terminal-border text-terminal-green rounded focus:ring-0" />
+                <span>9+ Excellent</span>
+              </label>
+              <label class="flex items-center gap-2 text-terminal-text cursor-pointer">
+                <input type="checkbox" class="form-checkbox bg-terminal-dark border-terminal-border text-terminal-green rounded focus:ring-0" />
+                <span>8-8.9 Great</span>
+              </label>
+              <label class="flex items-center gap-2 text-terminal-text cursor-pointer">
+                <input type="checkbox" class="form-checkbox bg-terminal-dark border-terminal-border text-terminal-green rounded focus:ring-0" />
+                <span>7-7.9 Good</span>
+              </label>
+              <label class="flex items-center gap-2 text-terminal-text cursor-pointer">
+                <input type="checkbox" class="form-checkbox bg-terminal-dark border-terminal-border text-terminal-green rounded focus:ring-0" />
+                <span>Below 7</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-6 border-t border-terminal-border">
+            <button class="w-full bg-terminal-dark border border-terminal-border text-terminal-green font-mono py-2 px-4 rounded hover:border-terminal-green transition-colors">
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Список обзоров -->
+      <div class="md:col-span-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reviews.map((review) => (
+            <article class="bg-terminal-bg border border-terminal-border rounded-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <a href={`/reviews/${review.slug}`} class="block">
+                <div class="relative">
+                  <!-- Placeholder изображение -->
+                  <div class="w-full h-48 bg-terminal-dark flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-terminal-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+
+                  {review.rating && (
+                    <div class="absolute top-3 right-3 bg-terminal-dark text-terminal-text px-2 py-1 rounded font-mono text-sm border border-terminal-border">
+                      <span class="text-terminal-yellow">{review.rating}/10</span>
+                    </div>
+                  )}
+                </div>
+              </a>
+
+              <div class="p-4">
+                <div class="mb-2 font-mono text-xs text-terminal-comment">
+                  <span>{formatDate(review.publishedAt)}</span>
+                  {review.category && (
+                    <>
+                      <span class="mx-2">|</span>
+                      <a href={`/categories/${review.category.slug}`} class="text-terminal-green">
+                        {review.category.name}
+                      </a>
+                    </>
+                  )}
+                </div>
+
+                <h2 class="font-mono text-lg font-bold text-terminal-yellow mb-2">
+                  <a href={`/reviews/${review.slug}`} class="hover:text-terminal-green transition-colors">
+                    {review.title}
+                  </a>
+                </h2>
+
+                <p class="text-terminal-text mb-4 text-sm">{review.excerpt}</p>
+
+                <a href={`/reviews/${review.slug}`} class="inline-block font-mono text-terminal-green text-sm hover:underline">
+                  $ cat full_review
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <!-- Пагинация -->
+        <div class="mt-8 flex justify-center">
+          <nav class="inline-flex items-center bg-terminal-dark rounded-md border border-terminal-border overflow-hidden">
+            <a href="#" class="px-3 py-2 text-terminal-text border-r border-terminal-border hover:bg-terminal-bg font-mono">Prev</a>
+            <a href="#" class="px-3 py-2 text-terminal-green bg-terminal-bg font-mono">1</a>
+            <a href="#" class="px-3 py-2 text-terminal-text border-l border-terminal-border hover:bg-terminal-bg font-mono">2</a>
+            <a href="#" class="px-3 py-2 text-terminal-text border-l border-terminal-border hover:bg-terminal-bg font-mono">3</a>
+            <a href="#" class="px-3 py-2 text-terminal-text border-l border-terminal-border hover:bg-terminal-bg font-mono">Next</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Простой скрипт для обработки изменения сортировки
+  document.addEventListener('DOMContentLoaded', () => {
+    const sortSelect = document.getElementById('sort');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        // В реальном приложении тут будет редирект или AJAX-запрос
+        console.log('Sort changed:', e.target.value);
+
+        // Для демонстрации мы просто перезагружаем страницу с параметром сортировки
+        const url = new URL(window.location);
+        url.searchParams.set('sort', e.target.value);
+        window.location.href = url.toString();
+      });
+    }
+  });
+</script>

@@ -227,4 +227,70 @@ try {
       <p class="text-terminal-comment text-sm mt-4">No spam, unsubscribe anytime with "grep --unsubscribe"</p>
     </div>
   </section>
+  <!-- Как это работает -->
+  <section class="py-12 bg-terminal-dark">
+    <div class="container mx-auto px-4">
+      <h2 class="font-mono text-2xl text-terminal-yellow text-center mb-12">
+        <span class="text-terminal-green">grep</span> --how-it-works
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="bg-terminal-bg h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-terminal-border">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-terminal-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h3 class="font-mono text-terminal-yellow mb-2">In-Depth Research</h3>
+          <p class="text-terminal-text">We spend weeks testing products in real-world scenarios before writing a single line of review.</p>
+        </div>
+
+        <div class="text-center">
+          <div class="bg-terminal-bg h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-terminal-border">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-terminal-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h3 class="font-mono text-terminal-yellow mb-2">Quantified Testing</h3>
+          <p class="text-terminal-text">Our custom benchmarks provide measurable comparisons between products across multiple dimensions.</p>
+        </div>
+
+        <div class="text-center">
+          <div class="bg-terminal-bg h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-terminal-border">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-terminal-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 class="font-mono text-terminal-yellow mb-2">No Sponsored Content</h3>
+          <p class="text-terminal-text">We don't accept paid reviews or sponsored content, ensuring our opinions remain unbiased.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Секция подписки на новости -->
+  <section class="py-12 bg-terminal-bg border-t border-b border-terminal-border">
+    <div class="container mx-auto px-4 max-w-screen-md text-center">
+      <h2 class="font-mono text-2xl text-terminal-yellow mb-2">
+        <span class="text-terminal-green">echo</span> "Subscribe for updates"
+      </h2>
+      <p class="text-terminal-text mb-6">Get the latest tech news and reviews delivered to your inbox.</p>
+
+      <form class="flex flex-col md:flex-row gap-4">
+        <input
+          type="email"
+          placeholder="your@email.com"
+          class="bg-terminal-dark text-terminal-text border border-terminal-border rounded px-4 py-2 flex-grow focus:outline-none focus:ring-1 focus:ring-terminal-green"
+          required
+        />
+        <button
+          type="submit"
+          class="bg-terminal-green hover:bg-opacity-90 text-terminal-bg font-bold py-2 px-6 rounded transition-colors font-mono"
+        >
+          Subscribe
+        </button>
+      </form>
+      <p class="text-terminal-comment text-sm mt-4">No spam, unsubscribe anytime with "grep --unsubscribe"</p>
+    </div>
+  </section>
 </Layout>
