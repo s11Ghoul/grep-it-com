@@ -74,16 +74,16 @@ try {
         {categories.data && categories.data.length > 0 ? (
           categories.data.map((category) => {
             // Проверяем наличие необходимых данных
-            const slug = category?.attributes?.slug;
-            const name = category?.attributes?.name || 'Unnamed Category';
-            const hasImage = category?.attributes?.image?.data != null;
+            const slug = category?.slug;
+            const name = category?.name || 'Unnamed Category';
+            const hasImage = category?.image != null;
 
             return (
               <a href={slug ? `/categories/${slug}` : '#'} class="bg-terminal-bg border border-terminal-border rounded-md p-4 text-center hover:border-terminal-green transition-colors">
                 <div class="h-16 flex items-center justify-center mb-4">
                   {hasImage ? (
                     <img
-                      src={getStrapiMedia(category.attributes.image)}
+                      src={getStrapiMedia(category.image)}
                       alt={name}
                       class="h-12 w-auto"
                     />
@@ -121,14 +121,14 @@ try {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {latestReviews.data && latestReviews.data.length > 0 ? (
           latestReviews.data.map((review) => {
-            // Проверяем наличие необходимых данных
-            const slug = review?.attributes?.slug;
-            const title = review?.attributes?.title || 'Untitled Review';
-            const excerpt = review?.attributes?.excerpt || 'No excerpt available';
-            const rating = review?.attributes?.rating;
-            const publishedAt = review?.attributes?.publishedAt;
-            const hasImage = review?.attributes?.featuredImage?.data != null;
-            const category = review?.attributes?.category?.data?.attributes;
+            // Проверяем наличие необходимых данных с учетом регистра полей
+            const slug = review?.slug;
+            const title = review?.Title || review?.title || 'Untitled Review';
+            const excerpt = review?.excerpt || 'No excerpt available';
+            const rating = review?.rating;
+            const publishedAt = review?.publishedAt;
+            const hasImage = review?.featuredImage != null;
+            const category = review?.product?.category?.data?.attributes || review?.category?.data?.attributes;
 
             return (
               <article class="bg-terminal-bg border border-terminal-border rounded-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -136,7 +136,7 @@ try {
                   <div class="relative">
                     {hasImage ? (
                       <img
-                        src={getStrapiMedia(review.attributes.featuredImage)}
+                        src={getStrapiMedia(review.featuredImage)}
                         alt={title}
                         class="w-full h-48 object-cover"
                         loading="lazy"

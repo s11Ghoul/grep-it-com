@@ -34,16 +34,18 @@ export async function fetchAPI(endpoint, params = {}) {
 
         // Получаем текст ответа для отладки
         const responseText = await response.text();
-        console.log('Response text:', responseText);
 
         // Если ответ не успешный, выбрасываем ошибку
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}. Response: ${responseText}`);
+            console.error(`API Error: ${response.status}. Response:`, responseText);
+            throw new Error(`API Error: ${response.status}`);
         }
 
         // Парсим ответ как JSON
         try {
-            return JSON.parse(responseText);
+            const data = JSON.parse(responseText);
+            console.log('Parsed API response structure:', JSON.stringify(data, null, 2));
+            return data;
         } catch (jsonError) {
             console.error('JSON parse error:', jsonError);
             throw new Error('Invalid JSON in API response');
@@ -58,8 +60,19 @@ export async function fetchAPI(endpoint, params = {}) {
  * Получение URL медиа-файла
  */
 export function getStrapiMedia(media) {
-    if (!media || !media.data) return null;
+    if (!media) return null;
 
-    const { url } = media.data.attributes;
-    return url.startsWith('/') ? `${API_URL}${url}` : url;
+    // Для варианта, когда изображение передается напрямую, без data/attributes
+    if (media.url) {
+        const url = media.url;
+        return url.startsWith('/') ? `${API_URL}${url}` : url;
+    }
+
+    // Для варианта со структурой data.attributes
+    if (media.data && media.data.attributes && media.data.attributes.url) {
+        const url = media.data.attributes.url;
+        return url.startsWith('/') ? `${API_URL}${url}` : url;
+    }
+
+    return null;
 }

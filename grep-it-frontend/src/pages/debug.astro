@@ -7,7 +7,7 @@ let error = null;
 
 try {
   // Самый простой запрос без параметров
-  data = await fetchAPI('categories');
+  data = await fetchAPI('categories', { populate: '*' });
   console.log('Data loaded:', data);
 } catch (err) {
   error = err.message;
@@ -50,6 +50,9 @@ try {
         </li>
         <li>
           <strong>Check CORS Configuration:</strong> Make sure Strapi allows requests from Astro
+        </li>
+        <li>
+          <strong>Check API Response Structure:</strong> Compare API structure with what your code expects
         </li>
       </ol>
     </div>
